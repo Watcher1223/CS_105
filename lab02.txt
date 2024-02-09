@@ -1,0 +1,63 @@
+Problem 1
+    1. It returns a Segmentation fault with a line of __GI_____strtol_l_internal and error at ../stdlib/strtol_l.c line 304
+    2. frame 0: line 304, in file ../stdlib/strtol_l.c
+       frame 1: line 126, in file ../stdlib/strtol.c
+       frame 2: line 27, in file atoi.c: No such file or directory.
+       frame 3: line 18, in file problem1.c.
+    3. We can not see what the was nptr is as the frame returns <optimized out> 
+    4. $1 = 0x0
+    5. [Inferior 1 (process 15434) exited normally]
+    6. The value of argv is 5, the elements of the argv array is {0x7fffffffe41e "/mnt/home/aomondi/Desktop/bits-handout/lab2/problem1", 
+    0x7fffffffe453 "5"} and the values were initially executed when we ran the file the r just uses the values that were executed previously
+    7. After finishing atoi and s we get a Segmentation fault meaning that we are out of boundsor outside given memory for problem1.
+    8. We see line 299     in ../stdlib/strtol_l.c and when we hit the enter key again we see the same thing
+    9. We see the three frames from part 2 in reverse order so hitting enter is the same as taking the next step
+    10. a = 5, b is 16, result is 5
+    11. Loop_while begins at line line 4 but we end up at line 8 so strange indeed!
+    12. The program stops at line 9, The current instruction is at function lea indicated by the arrow 0x0000000000401070 <+32>: lea -0x10(%rax),%ecx, we expected
+        to end up in loop_while but we ended up in main so it's not what we expected.
+    13. atoi is replaced by the call to strtol and the address that calls printf is  0x401040
+    14. There is no call to loop_whilein the main function which is why we get assembly code for the main function
+    15. when you type print/x 42 it outputs 0x2a and p 0x2f prints 47
+    16. 
+    17. No answer needed for this
+    
+Problem 2
+    1. print puzzle1 prints 1078530011
+    2. p/x puzzle1 prints 0x40490fdb which is what puzzle1 initialized with and not its decimal translation, which is more edifying as it is more accurate.
+    3. x/4bx &puzzle1 outputs 0x404078 <puzzle1>:     0xdb    0x0f    0x49    0x40, this is the reverse order of number 2 split into seperate bytes.
+       with x/wx 0x404078 we get the output of 0x404078 <puzzle1>: 0x40490fdb
+    4. It was the number pi (3.14159274)
+    5. It was correct as it is the representaion for pi.
+    6. the number is  2.7182818284590451 (Euler's e)
+    7. Yes, the puzzle looks like it's only outputing 2 values but it should actually be 1 
+    8. Yes, after checking our answer is correct.
+    9.
+    10.
+    11.
+    12.
+    13.
+    14.
+    15.
+    16.
+    17. 
+
+Problem 3
+1.
+    2.
+    3.
+    4.
+    5.
+    6.
+    7.
+    8.
+    9.
+    10.
+    11.
+    12.
+    13.
+    14.
+    15.
+    16.
+    17.
+    18.

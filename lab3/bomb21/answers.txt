@@ -1,0 +1,6 @@
+I wonder if he's using the same wind we are using?
+1 2 4 8 16 32
+2 b 149
+9 27
+5 115
+6 5 3 4 1 2

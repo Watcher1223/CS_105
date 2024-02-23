@@ -19,7 +19,7 @@ Problem 1
     13. atoi is replaced by the call to strtol and the address that calls printf is  0x401040
     14. There is no call to loop_whilein the main function which is why we get assembly code for the main function
     15. when you type print/x 42 it outputs 0x2a and p 0x2f prints 47
-    16. 
+    16. there is a 0x10 associated with lea which equates to the constant 16 which is uses as a parameter for b in loop_while for main.address
     17. No answer needed for this
     
 Problem 2
@@ -32,32 +32,35 @@ Problem 2
     6. the number is  2.7182818284590451 (Euler's e)
     7. Yes, the puzzle looks like it's only outputing 2 values but it should actually be 1 
     8. Yes, after checking our answer is correct.
-    9.
-    10.
-    11.
-    12.
-    13.
-    14.
-    15.
-    16.
-    17. 
+    9. "Was that really so hard?" 
+    10. It prints 10 as expected which we did not need print to find as a_size@entry has the value we needed there.
+    11. the value of a is (int *) 0x4052a0
+    12. a is 0x4052a0 which is displayed by line 20
+    13. a is (int *) 0x4052a4 and i = 1
+    14. we end up at line 24 and i = 2
+    15. we get 1
+    16. p *a now outputs 21
+    17. lines 39 and 40 39          for (i = 1;  i < argc;  i++),  printf ("%d ", array[i]);
 
 Problem 3
-1.
-    2.
-    3.
-    4.
-    5.
-    6.
-    7.
-    8.
-    9.
-    10.
-    11.
-    12.
-    13.
-    14.
-    15.
-    16.
-    17.
-    18.
+    1. The output is same as input with 42 and 27 flipped so we get 1 47 2 42 3 
+    2. it stops at line 29
+    3. it stops at line 35
+    4. No it does not stop at the breakpoint and just gives the out put meaning c did not show only the next iteration
+    5.  the assembly code at breakpoint 2 corresponds to the initialization of i in the for loop. 
+        which is (i =1) on the for statement
+    6. That it is at line 36, just after 35 in the for loop.
+    7. The contents of the array are {0, 1, 42, 2, 47, 0}
+    8. we stop at line 36, breakpoint 3
+    9. We have not covered eflags[ PF IF] cs ss ds es fs gs               
+    10. Of the flags we have discussed in class just ZF is set right now, which was caused by a je instruction
+    11. the value is 4215456, and typing p/x $rdi prints  0x4052a0 which is more meaningful as it gives information
+        about the address or the numerical value in a format that is assembly friendly.
+    12. I see instructions from the initialization of the variable array as ther is a call to malloc
+    13. We are on push %rbp instruction
+    14. hmc_pomona_fix
+    15. It will call the memory address 0x40113a as given in stepi and 40116c in nexti
+    16. line 26
+    17. 0x7fffffffdf98: 0x004011d2
+    18. initial rsp  0x7fffffffdf98    0x7fffffffdf98 final rsp   0x7fffffffdfa0      0x7fffffffdfa0, 
+        initial rip 0x40117e 0x40117e <fix_array+42>  final rip      0x4011d2         0x4011d2 <main+83>

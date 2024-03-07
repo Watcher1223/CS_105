@@ -1,11 +1,10 @@
 /*
  * Producer/consumer program using a ring buffer (lab 5).
  *
- *
  * Team members: Alspencer Omondi and Bryce Mey
  *
- *      Student 1 <aomondi@cs.hmc.edu>
- *      Student 2 <bmey@cs.hmc.edu>
+ * Student 1 <aomondi@cs.hmc.edu>
+ * Student 2 <bmey@cs.hmc.edu>
  */
 
 #include <pthread.h>
@@ -35,35 +34,35 @@ struct message
  * The ring buffer itself.
  */
 static struct message buffer[BUFSLOTS];
-
-    int bufferLength = 10;  /* Stores the buffer length*/
-    int readIndex = 0;      /* Stores the buffer length*/
-    int writeIndex = 0;     /* Stores the buffer length*/
+static pthread_cond_t not_Full = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t isFull = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int bufferLength = 10;  /* Stores the buffer length*/
+int readIndex = 0;      /* Stores the buffer length*/
+int writeIndex = 0;     /* Stores the buffer length*/
 
 /*
- * NEEDSWORK
- *
- * Sample conditions and mutexes.  You will need to customize these.
+ * Main function where the program starts execution.
  */
-
-static pthread_cond_t sample_condition = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
 int main(int argc, char *argv[])
 {
+    setlinebuf(stdout); // From section 3 in WriteUp
+
     pthread_t consumer_tid;
 
     /*
-     * Make sure output appears right away.
-     */
-    setlinebuf(stdout);
-
-    /*
-     * Create a thread for the consumer.
+     * Create a thread for the consumer
      */
     if (pthread_create(&consumer_tid, NULL, consumer, NULL) != 0)
     {
         fprintf(stderr, "Couldn't create consumer thread\n");
+        return 1;
+    }
+    setlinebuf(stdout);
+
+    if (pthread_join(consumer_tid, NULL) != 0)
+    {
+        fprintf(stderr, "Couldn't join consumer thread\n");
         return 1;
     }
 
@@ -84,8 +83,13 @@ int main(int argc, char *argv[])
         return 1;
     }
     return 0;
+
+    pthread_exit(NULL);
 }
 
+/*
+ * Producer function that produces messages and places them in the buffer.
+ */
 void *producer(void *arg)
 {
     unsigned int consumer_sleep; /* Space for reading in data */
@@ -94,44 +98,111 @@ void *producer(void *arg)
     unsigned int producer_sleep; /* Space for reading in data */
     int value;                   /* Space for reading in data */
 
-    while (scanf("%d%u%u%d",
-                 &value, &producer_sleep, &consumer_sleep, &print_code) == 4)
+    while (scanf("%d%u%u%d", &value, &producer_sleep, &consumer_sleep, &print_code) == 4)
     {
         line++;
         thread_sleep(producer_sleep);
 
-        // Message to the consumer in the buffer
+        pthread_mutex_lock(&mutex);
 
-        // %d%u%u%d
+        // Wait while the buffer is full
+        while ((writeIndex + 1) % bufferLength == readIndex)
+        {
+            pthread_cond_wait(&not_Full, &mutex);
+        }
 
-        /*
-         * After sending values to the consumer, print what was asked.
-         */
+        // Produce a message and update the write index
+        buffer[writeIndex].value = value;
+        buffer[writeIndex].consumer_sleep = consumer_sleep;
+        buffer[writeIndex].line = line;
+        buffer[writeIndex].print_code = print_code;
+        buffer[writeIndex].quit = 0;
+
+        writeIndex = (writeIndex + 1) % bufferLength;
+
+        // Signal that the buffer is not empty
+        pthread_cond_signal(&isFull);
+        pthread_mutex_unlock(&mutex);
+
+        // After sending values to the consumer, print what was asked.
         if (print_code == 1 || print_code == 3)
             printf("Produced %d from input line %d\n", value, line);
     }
-    // terminate the consumer
 
+    pthread_mutex_lock(&mutex);
+
+    // Wait while the buffer is full
+    while ((writeIndex + 1) % bufferLength == readIndex)
+    {
+        pthread_cond_wait(&not_Full, &mutex);
+    }
+
+    // Update the write index and signal that the buffer is not empty
+    writeIndex = (writeIndex + 1) % bufferLength;
+
+    pthread_cond_signal(&isFull);
+    pthread_mutex_unlock(&mutex);
+
+    // Terminate the consumer
     return NULL;
+
+    pthread_exit(NULL);
 }
 
+/*
+ * Consumer function that consumes messages from the buffer and processes them.
+ */
 void *consumer(void *arg)
 {
-    /*
-     * NEEDSWORK
-     *
-     * Write the consumer here.
-     */
+    int sum = 0;
+
+    while (1)
+    {
+        pthread_mutex_lock(&mutex);
+
+        // Wait while the buffer is empty
+        while (readIndex == writeIndex)
+        {
+            pthread_cond_wait(&isFull, &mutex);
+        }
+
+        // Consume a message and update the read index
+        int value = buffer[readIndex].value;
+        int consumer_sleep = buffer[readIndex].consumer_sleep;
+        int line = buffer[readIndex].line;
+        int print_code = buffer[readIndex].print_code;
+        int quit = buffer[readIndex].quit;
+
+        readIndex = (readIndex + 1) % bufferLength;
+
+        // Signal that the buffer is not full
+        pthread_cond_signal(&not_Full);
+        pthread_mutex_unlock(&mutex);
+
+        if (quit != 0)
+        {
+            // Quit signal received, print total and terminate
+            printf("Final sum is %d\n", sum);
+            return NULL;
+        }
+
+        // Sleep for consumer_sleep milliseconds
+        thread_sleep(consumer_sleep);
+
+        // Process the value
+        sum += value;
+
+        // Print status message if required
+        if (print_code == 2 || print_code == 3)
+            printf("Consumed %d from input line %d; sum = %d\n", value, line, sum);
+    }
 
     return NULL;
-
-    /*
-     * After sending values to the consumer, print what was asked.
-     */
-    // if (print_code == 1  ||  print_code == 3)
-    //     printf(  "Final sum is %d\n", value, line);
 }
 
+/*
+ * Function to simulate thread sleep for the given number of milliseconds.
+ */
 void thread_sleep(unsigned int ms)
 {
     struct timespec sleep_time;
@@ -139,13 +210,7 @@ void thread_sleep(unsigned int ms)
     if (ms == 0)
         return;
 
-    /*
-     * NEEDSWORK
-     *
-     * These assignment statements are dummies.  You will need to write
-     * correct values.  Remember that tv_nsec cannot exceed one billion!
-     */
-    sleep_time.tv_sec = 0;
-    sleep_time.tv_nsec = 250000000;
+    sleep_time.tv_sec = ms / 1000;
+    sleep_time.tv_nsec = (ms % 1000) * 1000000;
     nanosleep(&sleep_time, NULL);
 }

@@ -37,9 +37,9 @@ static struct message buffer[BUFSLOTS];
 static pthread_cond_t not_Full = PTHREAD_COND_INITIALIZER;
 static pthread_cond_t isFull = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-int bufferLength = 10;  /* Stores the buffer length*/
-int readIndex = 0;      /* Stores the buffer length*/
-int writeIndex = 0;     /* Stores the buffer length*/
+int bufferLength = 10; /* Stores the buffer length*/
+int readIndex = 0;     /* Stores the buffer length*/
+int writeIndex = 0;    /* Stores the buffer length*/
 
 /*
  * Main function where the program starts execution.
@@ -60,12 +60,6 @@ int main(int argc, char *argv[])
     }
     setlinebuf(stdout);
 
-    if (pthread_join(consumer_tid, NULL) != 0)
-    {
-        fprintf(stderr, "Couldn't join consumer thread\n");
-        return 1;
-    }
-
     /*
      * We will call the producer directly.  (Alternatively, we could
      * spawn a thread for the producer, but then we would have to join
@@ -83,8 +77,6 @@ int main(int argc, char *argv[])
         return 1;
     }
     return 0;
-
-    pthread_exit(NULL);
 }
 
 /*
@@ -129,6 +121,7 @@ void *producer(void *arg)
             printf("Produced %d from input line %d\n", value, line);
     }
 
+    // Send a quit signal to the consumer
     pthread_mutex_lock(&mutex);
 
     // Wait while the buffer is full
@@ -137,7 +130,8 @@ void *producer(void *arg)
         pthread_cond_wait(&not_Full, &mutex);
     }
 
-    // Update the write index and signal that the buffer is not empty
+    // Send quit signal and update the write index
+    buffer[writeIndex].quit = 1;
     writeIndex = (writeIndex + 1) % bufferLength;
 
     pthread_cond_signal(&isFull);
@@ -145,8 +139,6 @@ void *producer(void *arg)
 
     // Terminate the consumer
     return NULL;
-
-    pthread_exit(NULL);
 }
 
 /*

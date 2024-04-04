@@ -1988,7 +1988,7 @@ Disassembly of section .text:
   402eef: 48 89 55 28                  	movq	%rdx, 0x28(%rbp)
   402ef3: 48 b8 20 72 65 73 75 6c 74 20	movabsq	$0x20746c7573657220, %rax # imm = 0x20746C7573657220
   402efd: 48 89 45 30                  	movq	%rax, 0x30(%rbp)
-  402f01: c7 45 38 73 65 72 76         	movl	$0x76726573, 0x38(%rbp) # imm = 0x76726573
+  402f01: c7 45 38 73 65 72 76         	 	$0x76726573, 0x38(%rbp) # imm = 0x76726573
   402f08: 66 c7 45 3c 65 72            	movw	$0x7265, 0x3c(%rbp)     # imm = 0x7265
   402f0e: c6 45 3e 00                  	movb	$0x0, 0x3e(%rbp)
   402f12: 89 df                        	movl	%ebx, %edi

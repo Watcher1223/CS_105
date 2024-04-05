@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+# Run a simple series of fgrep tests, comparing their output with the
+# system implementation of fgrep.
+#
+FGREP=${FGREP:-./fgrep}
+
+need_blank=false
+
+TMP=/tmp/runtest.$$
+trap "rm -f $TMP; exit 1" 1 2 15
+trap "rm -f $TMP; exit 0" 13
+
+testone() {
+    local result status
+    if [ -f /dev/stdin ]
+    then
+        cat > $TMP
+    else
+        : > $TMP
+    fi
+    $need_blank  &&  echo ''
+    need_blank=true
+    echo "===== Testing fgrep $@"
+    result=$($FGREP "$@" < $TMP)
+    status=$?
+    sys_result=$(fgrep "$@" < $TMP 2>/dev/null)
+    if [ "$result" = "$sys_result" ]
+    then
+        echo "  Succeeded"
+    else
+        echo "  Failed! Your output was:"
+        echo "$result"
+        echo "  But the system version produced:"
+        echo "$sys_result"
+    fi
+    return $status
+}
+
+testone test test1.txt \
+  || echo "  Should have returned success status"
+testone test test2.txt \
+  && echo "  Should have returned failure status"
+testone test test1.txt test2.txt \
+  || echo "  Should have returned success status"
+testone -i test < test1.txt \
+  || echo "  Should have returned success status"
+testone -n -i our test1.txt test2.txt \
+  || echo "  Should have returned success status"
+testone -q -n -i our test1.txt test2.txt \
+  || echo "  Should have returned success status"
+testone -q -n -i spam test1.txt test2.txt \
+  || echo "  Should have returned success status"
+testone -q -n -i chocolate test1.txt test2.txt \
+  && echo "  Should have returned failure status"
+testone -q -i spam test1.txt test2.txt missing.txt \
+  || echo "  Should have returned success status"
+testone like test1.txt missing.txt test2.txt \
+  && echo "  Should have returned failure status"
+testone -n test test1.txt \
+  || echo "  Should have returned success status"
+testone -l test < test1.txt \
+  || echo "  Should have returned success status"
+echo ''
+echo '===== Testing fgrep -l -v test < test1.txt [usage message]'
+if $FGREP -l -v test < test1.txt
+then
+    echo "  Should have returned failure status"
+else
+    echo "  Succeeded"
+fi
+
+rm -f $TMP

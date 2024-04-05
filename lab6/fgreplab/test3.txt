@@ -1,0 +1,1 @@
+This tests whether we can match at the end when there is no newline

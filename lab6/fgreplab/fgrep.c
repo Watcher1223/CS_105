@@ -111,17 +111,19 @@ int main(int argc, char *argv[]) {
                 }
                 continue;
             }
-            if (!search_in_file(fp, argv[i], pattern, i_flag, l_flag, n_flag, q_flag, multiple_files)) {
-                file_error = 1; // Update error status if no matches found
-            }
-            else{
-                overall_found = 1;
+            int found = search_in_file(fp, argv[i], pattern, i_flag, l_flag, n_flag, q_flag, multiple_files);
+            if (!overall_found){
+                overall_found = found;
             }
         }
     }
 
     // In quiet mode, suppress normal output but consider file errors
-    if (q_flag) {
+
+    if (!overall_found){
+        file_error = 1;
+    }
+    if (file_error){
         return file_error;
     }
 

@@ -68,9 +68,17 @@ int main(int argc, char *argv[]) {
     int i_flag = 0, l_flag = 0, n_flag = 0, q_flag = 0;
     int opt, overall_found = 0, file_error = 0;
     char *pattern = NULL;
+    int optind = 0;
 
-    while ((opt = getopt(argc, argv, "ilnq")) != -1) {
-        switch (opt) {
+    for(int i = 1; i < argc; i++) 
+    {
+        if (argv[i][0] != '-'){
+            pattern = argv[i];
+            optind = i;
+            break;
+        }
+        int flag = argv[i][1];
+        switch (flag){
             case 'i': i_flag = 1; break;
             case 'l': l_flag = 1; break;
             case 'n': n_flag = 1; break;
@@ -97,19 +105,24 @@ int main(int argc, char *argv[]) {
         for (int i = optind; i < argc; i++) {
             FILE *fp = fopen(argv[i], "r");
             if (!fp) {
+                if (!q_flag){
                 fprintf(stderr, "Couldn't open '%s': No such file or directory\n", argv[i]);
                 file_error = 1; // Mark that an error occurred
+                }
                 continue;
             }
             if (!search_in_file(fp, argv[i], pattern, i_flag, l_flag, n_flag, q_flag, multiple_files)) {
                 file_error = 1; // Update error status if no matches found
+            }
+            else{
+                overall_found = 1;
             }
         }
     }
 
     // In quiet mode, suppress normal output but consider file errors
     if (q_flag) {
-        return file_error ? 1 : 0; // Return 1 if any file errors, otherwise 0
+        return file_error;
     }
 
     return overall_found ? 0 : 1; // Return 0 if matches found, 1 if no matches
